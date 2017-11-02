@@ -63,6 +63,42 @@ int decryptData(char *data, int dataLength)
 
             mov edi, data;              // put ADDRESS of data into edi
 
+	SWAP_HALF_NIBBLE:
+		
+		mov ax, word ptr[edi + ecx]
+			xchg ah, al
+			ror al, 2
+			ror ah, 2
+			mov word ptr[edi + ecx], ax
+			add ecx, 2;
+		cmp ecx, ebx;
+		jl SWAP_HALF_NIBBLE
+			
+		xor ecx,ecx
+	ROTATE_ONE_BIT :
+		mov al, byte ptr[edi + ecx]
+		ror al, 1
+		mov byte ptr[edi + ecx], al
+		inc ecx;
+		cmp ecx, ebx;
+		jl ROTATE_ONE_BIT
+
+			//reverse bit
+
+			// look up table
+			
+			xor ecx, ecx
+	SWAP_NIBBLE:
+		mov ax, word ptr[edi + ecx]
+			xchg ah, al
+			ror al, 4
+			ror ah, 4
+			mov word ptr[edi + ecx], ax
+			add ecx, 2;
+		cmp ecx, ebx;
+		jl SWAP_NIBBLE
+
+		/*
     XOR_ONE_LOOP:                   // loop label
         mov al, byte ptr[edi + ecx];// takes the value at edi + ecx (which is our counter that we zero'd above) and moves it to al
         xor al, 1;                  // xor al by 1

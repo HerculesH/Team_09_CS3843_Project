@@ -11,7 +11,7 @@
 // Defines
 // #define TEST_CODE
 
-#define CRYPTO_ORDER "ABCDE\0"
+#define CRYPTO_ORDER "DACEB\0"
 
 // Structures
 

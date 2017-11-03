@@ -65,15 +65,22 @@ int decryptData(char *data, int dataLength)
 
 	SWAP_HALF_NIBBLE:
 		
-		mov ax, word ptr[edi + ecx]
+		mov al, byte ptr[edi + ecx]
+			inc ecx
+			cmp ecx, ebx;
+		jl END2
+		mov ah, byte ptr[edi + ecx]
 			xchg ah, al
 			ror al, 2
 			ror ah, 2
-			mov word ptr[edi + ecx], ax
-			add ecx, 2;
+			dec ecx
+			mov byte ptr[edi + ecx], al
+			inc ecx
+			mov byte ptr[edi + ecx], ah
 		cmp ecx, ebx;
 		jl SWAP_HALF_NIBBLE
-			
+		END2 :
+
 		xor ecx,ecx
 	ROTATE_ONE_BIT :
 		mov al, byte ptr[edi + ecx]
@@ -84,20 +91,51 @@ int decryptData(char *data, int dataLength)
 		jl ROTATE_ONE_BIT
 
 			//reverse bit
+			xor ecx, ecx
+		REVERSE_BIT :
 
+			xor al, al
+			xor dl, dl
+			mov dl, byte ptr[edi + ecx]
+
+			mov al, dl
+
+			xor ah, ah
+			mov ah, 8
+
+			Loop2:
+				rcr al, 1
+				rcl dl, 1
+				dec ah
+				jnz Loop2
+
+				mov al, dl
+
+				mov byte ptr[edi + ecx], al
+
+			inc ecx
+			cmp ecx, ebx;
+		jl REVERSE_BIT
+		
 			// look up table
 			
 			xor ecx, ecx
 	SWAP_NIBBLE:
-		mov ax, word ptr[edi + ecx]
+		mov al, byte ptr[edi + ecx]
+			inc ecx
+			cmp ecx, ebx;
+		jl END1
+			mov ah, byte ptr[edi + ecx]
 			xchg ah, al
 			ror al, 4
 			ror ah, 4
-			mov word ptr[edi + ecx], ax
-			add ecx, 2;
-		cmp ecx, ebx;
+			dec ecx
+			mov byte ptr[edi + ecx], al
+			inc ecx
+			mov byte ptr[edi + ecx], ah
+			cmp ecx, ebx;
 		jl SWAP_NIBBLE
-
+		END1 :
 		/*
     XOR_ONE_LOOP:                   // loop label
         mov al, byte ptr[edi + ecx];// takes the value at edi + ecx (which is our counter that we zero'd above) and moves it to al

@@ -10,7 +10,6 @@
 int encryptData(char *data, int dataLength)
 {
 	int resulti = 0;
-	char table;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
     int iMilestoneXor = 1;
@@ -82,22 +81,25 @@ int encryptData(char *data, int dataLength)
 			cmp ecx, ebx;				// checks data lenght and exits if zero is reached
 			jl SWAP_HALF_NIBBLE			//end of loop
 		END2 :
-
+			
 		//Rotate bit right
 		xor ecx, ecx;					// resets counter
 	ROTATE_ONE_BIT:						// beginning of loop
+		xor eax, eax
 		mov al, byte ptr[edi + ecx]		// same as above function
 			ror al, 1					// rotates the bits of al registers data to the right
 			mov byte ptr[edi + ecx], al // moves the data back to the data location
 			inc ecx;					// increments the counter
 		cmp ecx, ebx;					// checks if end of data lenght is reached and exits if so
 		jl ROTATE_ONE_BIT				//end of loop
-
+			
+			
 			//reverse bit
 			xor ecx, ecx				//reset counter
 		REVERSE_BIT :					// beginning of loop
-		xor al, al						// sets al register to be 0
-			xor dl, dl					// sets dl register to be 0
+		xor eax, eax					// sets eax register to be 0 for data storage
+		xor edx, edx					// set edx register to be 0 for data storage
+			xor dl, dl					// sets dl register to be 0 for data storage
 			mov dl, byte ptr[edi + ecx]	// moves a byte of data to the dl register
 			mov al, dl					//moves the dl register data to al register
 			xor ah, ah					//xor ah register to use as a counter beginning at 0
@@ -112,18 +114,19 @@ int encryptData(char *data, int dataLength)
 			inc ecx						// increments the outer loop counter and checks if end of data has been reached, if so exits
 			cmp ecx, ebx
 			jl REVERSE_BIT				//end of loop
-
-
+			
+			
 			// look up table
 			xor ecx, ecx					//sets counter to 0
-		LOOK_UP_TABLE:						// beginning of loop
-				mov al, byte ptr[edi + ecx] //same as other loop above
-				mov table, al				// moves the byte of data into a local variable table
-				mov al, gEncodeTable[table] // exhanges the table value with the table variable and moves it to al register 
+		LOOK_UP_TABLE:   // beginning of loop
+				xor edx, edx				// set edx register to be 0 for data storage
+				mov dl, byte ptr[edi + ecx] //same as other loop above
+				mov al, [gEncodeTable + edx] // exhanges the table value with the table variable and moves it to al register 
 				mov byte ptr[edi + ecx], al // moves the byte of data back to the data location
 				inc ecx						// same as above loop
 				cmp ecx, ebx
 				jl LOOK_UP_TABLE			//end of loop
+				
 				
 
 				//Swap Nibble
@@ -144,7 +147,7 @@ int encryptData(char *data, int dataLength)
 				cmp ecx, ebx;				// checks for end of data lenght and exits if so
 			jl SWAP_NIBBLE					//end of loop
 			END1 :
-
+			
 	}
 
 	return resulti;

@@ -10,7 +10,6 @@
 int decryptData(char *data, int dataLength)
 {
 	int resulti = 0;
-	char table;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
 
@@ -62,87 +61,88 @@ int decryptData(char *data, int dataLength)
             mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
             mov edi, data;              // put ADDRESS of data into edi
-
-
-		//Swap half Nibble
-	SWAP_HALF_NIBBLE:					//beginning of loop
-		mov al, byte ptr[edi + ecx]		//moves the byte of data to al register
-			inc ecx						// increments the counter
-			cmp ecx, ebx;				// checks if the counter is larger than the lenght of the data
-		jl END2							// if so exits function
-			mov ah, byte ptr[edi + ecx] // moves the next byte of data to ah
-			xchg ah, al					// swaps the position of the two in Ax "DATA [ah,al] -> [al,ah]"
-			ror al, 2					// rotates the al register by 2 to the right (reversing the left rotate)
-			ror ah, 2					// rotates the ah register by 2 to the right (reversing the left rotate)
-			dec ecx						// decrements the counter
-			mov byte ptr[edi + ecx], al // moves a byte back to the previous data location
-			inc ecx
-			mov byte ptr[edi + ecx], ah // moves a byte to the current data location
-			cmp ecx, ebx;				// checks data lenght and exits if zero is reached
-		jl SWAP_HALF_NIBBLE				//end of loop
-		END2 :
-
-		//Rotate bit right
-		xor ecx, ecx					// resets counter
-		ROTATE_ONE_BIT :				// beginning of loop
-		mov al, byte ptr[edi + ecx]		// same as above function
-			ror al, 1					// rotates the bits of al registers data to the right
-			mov byte ptr[edi + ecx], al	// moves the data back to the data location
-			inc ecx;					// increments the counter
-		cmp ecx, ebx;					// checks if end of data lenght is reached and exits if so
-		jl ROTATE_ONE_BIT				//end of loop
-
-			//Reverse bit
-			xor ecx, ecx				//reset counter
-		REVERSE_BIT :					// beginning of loop
-		xor al, al						// sets al register to be 0
-			xor dl, dl					// sets dl register to be 0
-			mov dl, byte ptr[edi + ecx] // moves a byte of data to the dl register
-			mov al, dl					//moves the dl register data to al register
-			xor ah, ah					//xor ah register to use as a counter beginning at 0
-			mov ah, 8					//sets the inner loop counter to be 8
-
-		Loop1:							//beginning of inner loop
-		rcr al, 1						//rotates the bits with carry to the right by 1 in al register
-			rcl dl, 1					// rotates the bits with carry to the left in dl register
-			dec ah						// decrements the inner loop counter by 1
-			jnz Loop1					// loops as long as the inner loop counter != 0
-			mov byte ptr[edi + ecx], dl // moves the dl register data back to the data location
-			inc ecx						// increments the outer loop counter and checks if end of data has been reached, if so exits
-			cmp ecx, ebx
-			jl REVERSE_BIT				//end of loop
-
+		
+		//Swap Nibble
+						//sets counter to 0
+		SWAP_NIBBLE :					//beginning of loop
+		mov al, byte ptr[edi + ecx]		//same as above function
+		inc ecx						// increments the counter checks if end has been reached in data lenght and if so exits
+		cmp ecx, ebx;
+		jl END1
+		mov ah, byte ptr[edi + ecx]	//moves a byte of data at the next data location into ah register
+		xchg ah, al					// swaps the position of the two in Ax "DATA [ah,al] -> [al,ah]"
+		ror al, 4					// rotates the al registers bits 4 times to the left
+		ror ah, 4					// rotates the ah registers bits 4 times to the left
+		dec ecx						//decrements the counter
+		mov byte ptr[edi + ecx], al	//moves the al data back into the previous data location
+		inc ecx						//increments the counter
+		mov byte ptr[edi + ecx], ah	// moves the data from the ah register into the current data location
+		cmp ecx, ebx;				// checks for end of data lenght and exits if so
+		jl SWAP_NIBBLE					//end of loop
+		END1 :
+		
 			// look up table
 			xor ecx, ecx				//sets counter to 0
-		LOOK_UP_TABLE :					// beginning of loop
-		mov al, byte ptr[edi + ecx]		//same as other loop above
-			mov table, al				// moves the byte of data into a local variable table
-			mov al, gDecodeTable[table]	// exhanges the table value with the table variable and moves it to al register 
+		LOOK_UP_TABLE :	                // beginning of loop
+			xor edx,edx					// sets edx register to be 0 for data storage
+			mov dl, byte ptr[edi + ecx]		//same as other loop above
+			mov al, [gDecodeTable + edx]	// exhanges the table value with the table variable and moves it to al register 
 			mov byte ptr[edi + ecx], al	// moves the byte of data back to the data location
 			inc ecx						// same as above loop
 			cmp ecx, ebx
 			jl LOOK_UP_TABLE			//end of loop
 
+			//Reverse bit
+			xor ecx, ecx				//reset counter
+		REVERSE_BIT :					// beginning of loop
+			xor eax, eax						// sets eax register to be 0 for data storage
+				xor edx, edx                 // sets edx register to be 0 for data storage
+				// sets al register to be 0
+				xor dl, dl					// sets dl register to be 0 for data storage
+				mov dl, byte ptr[edi + ecx] // moves a byte of data to the dl register
+				mov al, dl					//moves the dl register data to al register
+				xor ah, ah					//xor ah register to use as a counter beginning at 0
+				mov ah, 8					//sets the inner loop counter to be 8
 
-			//Swap Nibble
-			xor ecx, ecx				//sets counter to 0
-		SWAP_NIBBLE :					//beginning of loop
-		mov al, byte ptr[edi + ecx]		//same as above function
-			inc ecx						// increments the counter checks if end has been reached in data lenght and if so exits
-			cmp ecx, ebx;
-		jl END1
-			mov ah, byte ptr[edi + ecx]	//moves a byte of data at the next data location into ah register
-			xchg ah, al					// swaps the position of the two in Ax "DATA [ah,al] -> [al,ah]"
-			ror al, 4					// rotates the al registers bits 4 times to the left
-			ror ah, 4					// rotates the ah registers bits 4 times to the left
-			dec ecx						//decrements the counter
-			mov byte ptr[edi + ecx], al	//moves the al data back into the previous data location
-			inc ecx						//increments the counter
-			mov byte ptr[edi + ecx], ah	// moves the data from the ah register into the current data location
-			cmp ecx, ebx;				// checks for end of data lenght and exits if so
-		jl SWAP_NIBBLE					//end of loop
-		END1 :
+			Loop1:							//beginning of inner loop
+			rcr al, 1						//rotates the bits with carry to the right by 1 in al register
+				rcl dl, 1					// rotates the bits with carry to the left in dl register
+				dec ah						// decrements the inner loop counter by 1
+				jnz Loop1					// loops as long as the inner loop counter != 0
+				mov byte ptr[edi + ecx], dl // moves the dl register data back to the data location
+				inc ecx						// increments the outer loop counter and checks if end of data has been reached, if so exits
+				cmp ecx, ebx
+				jl REVERSE_BIT				//end of loop
 
+			//Rotate bit right
+			xor ecx, ecx					// resets counter
+		ROTATE_ONE_BIT :				// beginning of loop
+			xor eax, eax				// set eax register to 0 for data storage
+				mov al, byte ptr[edi + ecx]		// same as above function
+				rol al, 1					// rotates the bits of al registers data to the right
+				mov byte ptr[edi + ecx], al	// moves the data back to the data location
+				inc ecx;					// increments the counter
+			cmp ecx, ebx;					// checks if end of data lenght is reached and exits if so
+			jl ROTATE_ONE_BIT				//end of loop
+				
+		//Swap half Nibble
+		xor ecx, ecx;
+		SWAP_HALF_NIBBLE:					//beginning of loop
+			mov al, byte ptr[edi + ecx]		//moves the byte of data to al register
+				inc ecx						// increments the counter
+				cmp ecx, ebx;				// checks if the counter is larger than the lenght of the data
+			jl END2							// if so exits function
+				mov ah, byte ptr[edi + ecx] // moves the next byte of data to ah
+				xchg ah, al					// swaps the position of the two in Ax "DATA [ah,al] -> [al,ah]"
+				ror al, 2					// rotates the al register by 2 to the right (reversing the left rotate)
+				ror ah, 2					// rotates the ah register by 2 to the right (reversing the left rotate)
+				dec ecx						// decrements the counter
+				mov byte ptr[edi + ecx], al // moves a byte back to the previous data location
+				inc ecx
+				mov byte ptr[edi + ecx], ah // moves a byte to the current data location
+				cmp ecx, ebx;				// checks data lenght and exits if zero is reached
+			jl SWAP_HALF_NIBBLE				//end of loop
+			END2 :
 	}
 
 	return resulti;

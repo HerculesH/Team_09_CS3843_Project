@@ -9,6 +9,8 @@
 // code to decrypt the data as specified by the project assignment
 int decryptData(char *data, int dataLength)
 {
+	int start = 2;
+	int hop = 3;
 	int resulti = 0;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
@@ -62,6 +64,42 @@ int decryptData(char *data, int dataLength)
 
 			mov edi, data;              // put ADDRESS of data into edi
 		
+		//hopcount
+
+		mov ecx, 2
+			mov edx, data
+			mov ebx, edi
+			add ebx, dataLength
+
+		next_data :
+
+		mov al, byte ptr[edx]
+			xor al, byte ptr[esi + ecx]
+			mov byte ptr[edx], al
+			
+			inc edx
+			cmp edx, ebx
+			je exit_encrypt
+
+			add ecx, hop
+			cmp ecx, dataLength
+			jb next_data
+			sub ecx, dataLength
+			jmp next_data
+
+		exit_encrypt :
+		//end hop
+		xor ecx, ecx;               // zero ecx for counter
+		mov ebx, dataLength;        // move dataLength into ebx
+
+		lea esi, gkey				// put the ADDRESS of gkey into esi
+			mov esi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+
+		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
+			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+
+			mov edi, data;
+		/*
 		//Swap Nibble
 		//sets counter to 0
 	SWAP_NIBBLE:					//beginning of loop
@@ -138,8 +176,8 @@ int decryptData(char *data, int dataLength)
 			inc ecx
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 			jl SWAP_HALF_NIBBLE					//end of loop
-			
+				*/
 	}
-
+	
 	return resulti;
 } // decryptData

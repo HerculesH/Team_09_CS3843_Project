@@ -9,10 +9,13 @@
 // code to encrypt the data as specified by the project assignment
 int encryptData(char *data, int dataLength)
 {
+	int start = 2;
+	int hop = 3;
 	int resulti = 0;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
 	int iMilestoneXor = 1;
+
 
 	// You can not declare any local variables in C, but should use resulti to indicate any errors
 	// Set up the stack frame and assign variables in assembly if you need to do so
@@ -63,7 +66,45 @@ int encryptData(char *data, int dataLength)
 
 			mov edi, data;              // put ADDRESS of data into edi
 
+		//hopcount
 
+			mov ecx, 2
+			mov edx, data
+			mov ebx, edi
+			add ebx, dataLength
+
+		next_data :
+
+			mov al, byte ptr[edx]
+			xor al, byte ptr[esi + ecx]
+			mov byte ptr [edx], al
+
+			inc edx
+			cmp edx, ebx
+			je exit_encrypt
+
+			add ecx, hop
+			cmp ecx, dataLength
+			jb next_data
+			sub ecx, dataLength
+			jmp next_data
+
+		exit_encrypt :
+			//end hop
+			xor ecx, ecx;               // zero ecx for counter
+			mov ebx, dataLength;        // move dataLength into ebx
+
+			lea esi, gkey				// put the ADDRESS of gkey into esi
+				mov esi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+
+			lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
+				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+
+				mov edi, data;              // put ADDRESS of data into edi
+			/*
+		
+			
+			xor ecx, ecx;
 		//sets counter to 0
 		SWAP_HALF_NIBBLE :					//beginning of loop
 		xor edx, edx
@@ -143,7 +184,7 @@ int encryptData(char *data, int dataLength)
 			inc ecx
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 		jl SWAP_NIBBLE					//end of loop
-		
+		*/
 	}
 
 	return resulti;

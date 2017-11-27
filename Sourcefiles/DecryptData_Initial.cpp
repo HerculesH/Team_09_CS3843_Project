@@ -62,52 +62,8 @@ int decryptData(char *data, int dataLength)
 		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
 			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
-			mov edi, data;              // put ADDRESS of data into edi
-		
-		//hopcount
-			NUM_rounds:
-
-		mov edx, data
-			mov ebx, edx
-			add ebx, dataLength
-
-		next_data :
-
-		mov al, byte ptr[edx]
-			xor al, byte ptr[esi + ecx]
-			mov byte ptr[edx], al
-
-			inc edx
-			cmp edx, ebx
-			je exit_encrypt
-
-			add ecx, hop
-			cmp ecx, 65537
-			jb next_data
-			sub ecx, 65537
-			jmp next_data
-
-		exit_encrypt :
-
-		xor ecx, ecx
-			mov ecx, gNumRounds
-			dec ecx
-			mov gNumRounds, ecx
-			cmp ecx, 0
-			jne NUM_rounds
-
-		//end hop
-		xor ecx, ecx;               // zero ecx for counter
-		mov ebx, dataLength;        // move dataLength into ebx
-
-		lea esi, gkey				// put the ADDRESS of gkey into esi
-			mov esi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
-
-		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
-			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
-
 			mov edi, data;
-		/*
+		
 		//Swap Nibble
 		//sets counter to 0
 	SWAP_NIBBLE:					//beginning of loop
@@ -185,6 +141,54 @@ int decryptData(char *data, int dataLength)
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 			jl SWAP_HALF_NIBBLE					//end of loop
 				//*/
+
+
+			xor ecx, ecx;               // zero ecx for counter
+			mov ebx, dataLength;        // move dataLength into ebx
+
+			lea edi, gkey				// put the ADDRESS of gkey into esi
+				mov edi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+
+			lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
+				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+
+				//mov edi, data;              // put ADDRESS of data into edi
+
+				//hopcount
+			NUM_rounds :
+
+				xor eax, eax
+				mov edx, data
+				mov ebx, edx
+				add ebx, dataLength
+				mov ax, word ptr[esi + ecx]
+
+			next_data :
+					  xor ecx, ecx
+					  mov cl, byte ptr[edx]
+					  xor cl, byte ptr[edi + eax]
+					  mov byte ptr[edx], cl
+
+					  inc edx
+					  cmp edx, ebx
+					  je exit_encrypt
+
+					  add al, ah
+					  cmp ax, 65537
+					  jb next_data
+					  sub ax, 65537
+					  jmp next_data
+
+				  exit_encrypt :
+
+				xor ecx, ecx
+				//mov ecx, gNumRounds
+				//dec ecx
+				//mov gNumRounds, ecx
+				cmp ecx, 0
+				jne NUM_rounds
+
+				//end hop
 	}
 	
 	return resulti;

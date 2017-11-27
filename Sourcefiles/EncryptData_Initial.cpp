@@ -16,7 +16,6 @@ int encryptData(char *data, int dataLength)
 	gdebug2 = 0;					// also can have a breakpoint in C code
 	int iMilestoneXor = 1;
 
-
 	// You can not declare any local variables in C, but should use resulti to indicate any errors
 	// Set up the stack frame and assign variables in assembly if you need to do so
 	// access the parameters BEFORE setting up your own stack frame
@@ -69,32 +68,34 @@ int encryptData(char *data, int dataLength)
 		//hopcount
 			NUM_rounds :
 			
+			xor eax, eax
 			mov edx, data
 			mov ebx, edx
 			add ebx, dataLength
+			mov ax, word ptr[esi + ecx]
 
 		next_data :
-
-			mov al, byte ptr[edx]
-			xor al, byte ptr[esi + ecx]
-			mov byte ptr [edx], al
+			xor ecx, ecx
+			mov cl, byte ptr[edx]
+			xor cl, byte ptr[edi + eax]
+			mov byte ptr [edx], cl
 
 			inc edx
 			cmp edx, ebx
 			je exit_encrypt
 
-			add ecx, hop
-			cmp ecx, 65537
+			add al, ah
+			cmp ax, 65537
 			jb next_data
-			sub ecx, 65537
+			sub ax, 65537
 			jmp next_data
 
 		exit_encrypt :
 
 			xor ecx,ecx
-			mov ecx, gNumRounds
-			dec ecx
-			mov gNumRounds, ecx
+			//mov ecx, gNumRounds
+			//dec ecx
+			//mov gNumRounds, ecx
 			cmp ecx, 0
 			jne NUM_rounds
 
@@ -111,7 +112,7 @@ int encryptData(char *data, int dataLength)
 				mov edi, data;              // put ADDRESS of data into edi
 			
 		
-			/*
+			
 			xor ecx, ecx;
 		//sets counter to 0
 		SWAP_HALF_NIBBLE :					//beginning of loop

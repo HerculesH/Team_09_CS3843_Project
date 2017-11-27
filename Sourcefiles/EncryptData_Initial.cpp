@@ -58,19 +58,19 @@ int encryptData(char *data, int dataLength)
 		xor ecx, ecx;               // zero ecx for counter
 		mov ebx, dataLength;        // move dataLength into ebx
 
-		lea esi, gkey				// put the ADDRESS of gkey into esi
-			mov esi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+		lea edi, gkey				// put the ADDRESS of gkey into edi
+			mov edi, gptrKey;			// put the ADDRESS of gkey into edi (since *gptrKey = gkey)
 
 		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
 			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
-			mov edi, data;              // put ADDRESS of data into edi
+			//mov edi, data;              // put ADDRESS of data into edi
 
 		//hopcount
-
-			mov ecx, 2
+			NUM_rounds :
+			
 			mov edx, data
-			mov ebx, edi
+			mov ebx, edx
 			add ebx, dataLength
 
 		next_data :
@@ -84,12 +84,20 @@ int encryptData(char *data, int dataLength)
 			je exit_encrypt
 
 			add ecx, hop
-			cmp ecx, dataLength
+			cmp ecx, 65537
 			jb next_data
-			sub ecx, dataLength
+			sub ecx, 65537
 			jmp next_data
 
 		exit_encrypt :
+
+			xor ecx,ecx
+			mov ecx, gNumRounds
+			dec ecx
+			mov gNumRounds, ecx
+			cmp ecx, 0
+			jne NUM_rounds
+
 			//end hop
 			xor ecx, ecx;               // zero ecx for counter
 			mov ebx, dataLength;        // move dataLength into ebx
@@ -101,9 +109,9 @@ int encryptData(char *data, int dataLength)
 				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
 				mov edi, data;              // put ADDRESS of data into edi
-			/*
-		
 			
+		
+			/*
 			xor ecx, ecx;
 		//sets counter to 0
 		SWAP_HALF_NIBBLE :					//beginning of loop
@@ -184,7 +192,7 @@ int encryptData(char *data, int dataLength)
 			inc ecx
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 		jl SWAP_NIBBLE					//end of loop
-		*/
+		//*/
 	}
 
 	return resulti;

@@ -65,10 +65,10 @@ int decryptData(char *data, int dataLength)
 			mov edi, data;              // put ADDRESS of data into edi
 		
 		//hopcount
+			NUM_rounds:
 
-		mov ecx, 2
-			mov edx, data
-			mov ebx, edi
+		mov edx, data
+			mov ebx, edx
 			add ebx, dataLength
 
 		next_data :
@@ -76,18 +76,26 @@ int decryptData(char *data, int dataLength)
 		mov al, byte ptr[edx]
 			xor al, byte ptr[esi + ecx]
 			mov byte ptr[edx], al
-			
+
 			inc edx
 			cmp edx, ebx
 			je exit_encrypt
 
 			add ecx, hop
-			cmp ecx, dataLength
+			cmp ecx, 65537
 			jb next_data
-			sub ecx, dataLength
+			sub ecx, 65537
 			jmp next_data
 
 		exit_encrypt :
+
+		xor ecx, ecx
+			mov ecx, gNumRounds
+			dec ecx
+			mov gNumRounds, ecx
+			cmp ecx, 0
+			jne NUM_rounds
+
 		//end hop
 		xor ecx, ecx;               // zero ecx for counter
 		mov ebx, dataLength;        // move dataLength into ebx
@@ -176,7 +184,7 @@ int decryptData(char *data, int dataLength)
 			inc ecx
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 			jl SWAP_HALF_NIBBLE					//end of loop
-				*/
+				//*/
 	}
 	
 	return resulti;

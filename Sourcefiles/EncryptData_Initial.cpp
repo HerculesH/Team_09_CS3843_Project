@@ -58,21 +58,25 @@ int encryptData(char *data, int dataLength)
 		mov ebx, dataLength;        // move dataLength into ebx
 
 		lea edi, gkey				// put the ADDRESS of gkey into edi
-			mov edi, gptrKey;			// put the ADDRESS of gkey into edi (since *gptrKey = gkey)
+//			mov edi, gptrKey;			// put the ADDRESS of gkey into edi (since *gptrKey = gkey)
 
 		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
-			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+//			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
 			//mov edi, data;              // put ADDRESS of data into edi
 
 		//hopcount
-			NUM_rounds :
-			
-			xor eax, eax
+		NUM_rounds :
+			mov gCurrentRounds, ecx
+
 			mov edx, data
 			mov ebx, edx
 			add ebx, dataLength
-			mov ax, word ptr[esi + ecx]
+			xor eax, eax
+			mov ah, byte ptr[esi + ecx]
+			mov al, byte ptr[esi + ecx + 1]
+
+			mov gkeyindex,eax
 
 		next_data :
 			xor ecx, ecx
@@ -84,19 +88,16 @@ int encryptData(char *data, int dataLength)
 			cmp edx, ebx
 			je exit_encrypt
 
-			add al, ah
-			cmp ax, 65537
+			add eax, gkeyindex
+			cmp eax, 65537
 			jb next_data
-			sub ax, 65537
+			sub eax, 65537
 			jmp next_data
 
 		exit_encrypt :
-
-			xor ecx,ecx
-			//mov ecx, gNumRounds
-			//dec ecx
-			//mov gNumRounds, ecx
-			cmp ecx, 0
+			mov ecx, gCurrentRounds
+			inc ecx
+			cmp ecx, gNumRounds
 			jne NUM_rounds
 
 			//end hop

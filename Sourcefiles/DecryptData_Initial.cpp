@@ -153,38 +153,42 @@ int decryptData(char *data, int dataLength)
 				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
 				//mov edi, data;              // put ADDRESS of data into edi
+			
+				mov ecx, gCurrentRounds
 
 				//hopcount
 			NUM_rounds :
 
-				xor eax, eax
 				mov edx, data
 				mov ebx, edx
 				add ebx, dataLength
-				mov ax, word ptr[esi + ecx]
+				xor eax, eax
+				mov ah, byte ptr[esi + ecx]
+				mov al, byte ptr[esi + ecx + 1]
+
+				mov gkeyindex, eax
 
 			next_data :
-					  xor ecx, ecx
-					  mov cl, byte ptr[edx]
-					  xor cl, byte ptr[edi + eax]
-					  mov byte ptr[edx], cl
-
-					  inc edx
-					  cmp edx, ebx
-					  je exit_encrypt
-
-					  add al, ah
-					  cmp ax, 65537
-					  jb next_data
-					  sub ax, 65537
-					  jmp next_data
-
-				  exit_encrypt :
-
 				xor ecx, ecx
-				//mov ecx, gNumRounds
-				//dec ecx
-				//mov gNumRounds, ecx
+				mov cl, byte ptr[edx]
+				xor cl, byte ptr[edi + eax]
+				mov byte ptr[edx], cl
+
+				inc edx
+				cmp edx, ebx
+				je exit_encrypt
+
+				add eax, gkeyindex
+				cmp eax, 65537
+				jb next_data
+				sub eax, 65537
+				jmp next_data
+
+				exit_encrypt :
+
+				mov ecx, gNumRounds
+				dec ecx
+				mov gNumRounds, ecx
 				cmp ecx, 0
 				jne NUM_rounds
 

@@ -9,6 +9,8 @@
 // code to encrypt the data as specified by the project assignment
 int encryptData(char *data, int dataLength)
 {
+	int start = 2;
+	int hop = 3;
 	int resulti = 0;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
@@ -55,15 +57,64 @@ int encryptData(char *data, int dataLength)
 		xor ecx, ecx;               // zero ecx for counter
 		mov ebx, dataLength;        // move dataLength into ebx
 
-		lea esi, gkey				// put the ADDRESS of gkey into esi
-			mov esi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+		lea edi, gkey				// put the ADDRESS of gkey into edi
+//			mov edi, gptrKey;			// put the ADDRESS of gkey into edi (since *gptrKey = gkey)
 
 		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
-			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+//			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
-			mov edi, data;              // put ADDRESS of data into edi
+			//mov edi, data;              // put ADDRESS of data into edi
 
+		//hopcount
+		NUM_rounds :
+			mov gCurrentRounds, ecx
 
+			mov edx, data
+			mov ebx, edx
+			add ebx, dataLength
+			xor eax, eax
+			mov ah, byte ptr[esi + ecx]
+			mov al, byte ptr[esi + ecx + 1]
+
+			mov gkeyindex,eax
+
+		next_data :
+			xor ecx, ecx
+			mov cl, byte ptr[edx]
+			xor cl, byte ptr[edi + eax]
+			mov byte ptr [edx], cl
+
+			inc edx
+			cmp edx, ebx
+			je exit_encrypt
+
+			add eax, gkeyindex
+			cmp eax, 65537
+			jb next_data
+			sub eax, 65537
+			jmp next_data
+
+		exit_encrypt :
+			mov ecx, gCurrentRounds
+			inc ecx
+			cmp ecx, gNumRounds
+			jne NUM_rounds
+
+			//end hop
+			xor ecx, ecx;               // zero ecx for counter
+			mov ebx, dataLength;        // move dataLength into ebx
+
+			lea esi, gkey				// put the ADDRESS of gkey into esi
+				mov esi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+
+			lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
+				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+
+				mov edi, data;              // put ADDRESS of data into edi
+			
+		
+			
+			xor ecx, ecx;
 		//sets counter to 0
 		SWAP_HALF_NIBBLE :					//beginning of loop
 		xor edx, edx
@@ -143,7 +194,7 @@ int encryptData(char *data, int dataLength)
 			inc ecx
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 		jl SWAP_NIBBLE					//end of loop
-		
+		//*/
 	}
 
 	return resulti;

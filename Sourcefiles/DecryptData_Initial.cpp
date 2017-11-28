@@ -9,6 +9,8 @@
 // code to decrypt the data as specified by the project assignment
 int decryptData(char *data, int dataLength)
 {
+	int start = 2;
+	int hop = 3;
 	int resulti = 0;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
@@ -60,7 +62,7 @@ int decryptData(char *data, int dataLength)
 		lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
 			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
-			mov edi, data;              // put ADDRESS of data into edi
+			mov edi, data;
 		
 		//Swap Nibble
 		//sets counter to 0
@@ -138,8 +140,60 @@ int decryptData(char *data, int dataLength)
 			inc ecx
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 			jl SWAP_HALF_NIBBLE					//end of loop
-			
-	}
+				//*/
 
+
+			xor ecx, ecx;               // zero ecx for counter
+			mov ebx, dataLength;        // move dataLength into ebx
+
+			lea edi, gkey				// put the ADDRESS of gkey into esi
+				mov edi, gptrKey;			// put the ADDRESS of gkey into esi (since *gptrKey = gkey)
+
+			lea	esi, gPasswordHash		// put ADDRESS of gPasswordHash into esi
+				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
+
+				//mov edi, data;              // put ADDRESS of data into edi
+			
+				mov ecx, gCurrentRounds
+
+				//hopcount
+			NUM_rounds :
+
+				mov edx, data
+				mov ebx, edx
+				add ebx, dataLength
+				xor eax, eax
+				mov ah, byte ptr[esi + ecx]
+				mov al, byte ptr[esi + ecx + 1]
+
+				mov gkeyindex, eax
+
+			next_data :
+				xor ecx, ecx
+				mov cl, byte ptr[edx]
+				xor cl, byte ptr[edi + eax]
+				mov byte ptr[edx], cl
+
+				inc edx
+				cmp edx, ebx
+				je exit_encrypt
+
+				add eax, gkeyindex
+				cmp eax, 65537
+				jb next_data
+				sub eax, 65537
+				jmp next_data
+
+				exit_encrypt :
+
+				mov ecx, gNumRounds
+				dec ecx
+				mov gNumRounds, ecx
+				cmp ecx, 0
+				jne NUM_rounds
+
+				//end hop
+	}
+	
 	return resulti;
 } // decryptData

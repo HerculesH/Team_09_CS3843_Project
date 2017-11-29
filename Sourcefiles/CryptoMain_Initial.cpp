@@ -59,6 +59,9 @@ char gOutFileName[256];
 char gKeyFileName[256];
 int gOp = 0;			// 1 = encrypt, 2 = decrypt
 int gNumRounds = 1;
+int gCurrentRounds = 0;
+int gkeyindex = 0;
+int ghopindex = 0;
 
 // assembly language to count the number of ASCII letters in a data array
 //	numC = number of capital letters

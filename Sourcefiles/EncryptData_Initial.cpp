@@ -9,8 +9,7 @@
 // code to encrypt the data as specified by the project assignment
 int encryptData(char *data, int dataLength)
 {
-	int start = 2;
-	int hop = 3;
+
 	int resulti = 0;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
@@ -72,13 +71,22 @@ int encryptData(char *data, int dataLength)
 			mov edx, data
 			mov ebx, edx
 			add ebx, dataLength
+
 			xor eax, eax
-			mov ah, byte ptr[esi + ecx]
-			mov al, byte ptr[esi + ecx + 1]
+			mov ah, byte ptr[esi + 2 + ecx * 4]
+			mov al, byte ptr[esi + 3 + ecx * 4]
+
+			mov ghopindex, eax;
+
+			xor eax, eax
+			mov ah, byte ptr[esi + ecx * 4]
+			mov al, byte ptr[esi + 1 + ecx * 4]
 
 			mov gkeyindex,eax
+			
 
 		next_data :
+			
 			xor ecx, ecx
 			mov cl, byte ptr[edx]
 			xor cl, byte ptr[edi + eax]
@@ -88,7 +96,7 @@ int encryptData(char *data, int dataLength)
 			cmp edx, ebx
 			je exit_encrypt
 
-			add eax, gkeyindex
+			add eax, ghopindex
 			cmp eax, 65537
 			jb next_data
 			sub eax, 65537

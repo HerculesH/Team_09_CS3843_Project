@@ -37,6 +37,9 @@ extern char gOutFileName[256];
 extern char gKeyFileName[256];
 extern int gOp;			// 1 = encrypt, 2 = decrypt
 extern int gNumRounds;
+extern int gCurrentRounds;
+extern int gkeyindex;
+extern int ghopindex;
 
 extern unsigned char gEncodeTable[256];
 extern unsigned char gDecodeTable[256];

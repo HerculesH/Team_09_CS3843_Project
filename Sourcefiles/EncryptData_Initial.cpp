@@ -9,8 +9,7 @@
 // code to encrypt the data as specified by the project assignment
 int encryptData(char *data, int dataLength)
 {
-	int start = 2;
-	int hop = 3;
+
 	int resulti = 0;
 	gdebug1 = 0;					// a couple of global variables that could be used for debugging
 	gdebug2 = 0;					// also can have a breakpoint in C code
@@ -53,6 +52,7 @@ int encryptData(char *data, int dataLength)
 		//*/
 
 		//*
+	NUM_rounds:
 
 		xor ecx, ecx;               // zero ecx for counter
 		mov ebx, dataLength;        // move dataLength into ebx
@@ -64,21 +64,30 @@ int encryptData(char *data, int dataLength)
 //			mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
 			//mov edi, data;              // put ADDRESS of data into edi
+		
+			mov ecx, gCurrentRounds
 
 		//hopcount
-		NUM_rounds :
-			mov gCurrentRounds, ecx
 
 			mov edx, data
 			mov ebx, edx
 			add ebx, dataLength
+
 			xor eax, eax
-			mov ah, byte ptr[esi + ecx]
-			mov al, byte ptr[esi + ecx + 1]
+			mov ah, byte ptr[esi + 2 + ecx * 4]
+			mov al, byte ptr[esi + 3 + ecx * 4]
+
+			mov ghopindex, eax;
+
+			xor eax, eax
+			mov ah, byte ptr[esi + ecx * 4]
+			mov al, byte ptr[esi + 1 + ecx * 4]
 
 			mov gkeyindex,eax
+			
 
 		next_data :
+			
 			xor ecx, ecx
 			mov cl, byte ptr[edx]
 			xor cl, byte ptr[edi + eax]
@@ -88,17 +97,13 @@ int encryptData(char *data, int dataLength)
 			cmp edx, ebx
 			je exit_encrypt
 
-			add eax, gkeyindex
+			add eax, ghopindex
 			cmp eax, 65537
 			jb next_data
 			sub eax, 65537
 			jmp next_data
 
 		exit_encrypt :
-			mov ecx, gCurrentRounds
-			inc ecx
-			cmp ecx, gNumRounds
-			jne NUM_rounds
 
 			//end hop
 			xor ecx, ecx;               // zero ecx for counter
@@ -111,8 +116,6 @@ int encryptData(char *data, int dataLength)
 				mov esi, gptrPasswordHash	// put ADDRESS of gPasswordHash into esi (since unsigned char *gptrPasswordHash = gPasswordHash)
 
 				mov edi, data;              // put ADDRESS of data into edi
-			
-		
 			
 			xor ecx, ecx;
 		//sets counter to 0
@@ -195,6 +198,11 @@ int encryptData(char *data, int dataLength)
 			cmp ecx, ebx;				// checks for end of data lenght and exits if so
 		jl SWAP_NIBBLE					//end of loop
 		//*/
+		mov ecx, gCurrentRounds
+		inc ecx
+		mov gCurrentRounds, ecx
+		cmp ecx, gNumRounds
+		jne NUM_rounds
 	}
 
 	return resulti;

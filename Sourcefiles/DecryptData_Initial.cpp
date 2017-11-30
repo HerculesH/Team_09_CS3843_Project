@@ -52,7 +52,9 @@ int decryptData(char *data, int dataLength)
 		// Lowercase "c" = 0x63 becomes capital "B" since 0x63 xor 0x21 = 0x42
 		//*/
 		//*
-
+	NUM_rounds:
+			
+		
 		xor ecx, ecx;               // zero ecx for counter
 		mov ebx, dataLength;        // move dataLength into ebx
 
@@ -154,41 +156,47 @@ int decryptData(char *data, int dataLength)
 
 				//mov edi, data;              // put ADDRESS of data into edi
 			
-				mov ecx, gCurrentRounds
+				mov ecx, gNumRounds
+				dec ecx
+				mov gNumRounds, ecx
 
 				//hopcount
-			NUM_rounds :
 
 				mov edx, data
 				mov ebx, edx
 				add ebx, dataLength
 				xor eax, eax
-				mov ah, byte ptr[esi + ecx]
-				mov al, byte ptr[esi + ecx + 1]
+			mov ah, byte ptr[esi + 2 + ecx * 4]
+			mov al, byte ptr[esi + 3 + ecx * 4]
 
-				mov gkeyindex, eax
+			mov ghopindex, eax;
 
-			next_data :
-				xor ecx, ecx
-				mov cl, byte ptr[edx]
-				xor cl, byte ptr[edi + eax]
-				mov byte ptr[edx], cl
+			xor eax, eax
+			mov ah, byte ptr[esi + ecx * 4]
+			mov al, byte ptr[esi + 1 + ecx * 4]
 
-				inc edx
-				cmp edx, ebx
-				je exit_encrypt
+			mov gkeyindex,eax
+			
 
-				add eax, gkeyindex
-				cmp eax, 65537
-				jb next_data
-				sub eax, 65537
-				jmp next_data
+		next_data :
+			
+			xor ecx, ecx
+			mov cl, byte ptr[edx]
+			xor cl, byte ptr[edi + eax]
+			mov byte ptr [edx], cl
 
-				exit_encrypt :
+			inc edx
+			cmp edx, ebx
+			je exit_encrypt
 
+			add eax, ghopindex
+			cmp eax, 65537
+			jb next_data
+			sub eax, 65537
+			jmp next_data
+
+			exit_encrypt :
 				mov ecx, gNumRounds
-				dec ecx
-				mov gNumRounds, ecx
 				cmp ecx, 0
 				jne NUM_rounds
 
